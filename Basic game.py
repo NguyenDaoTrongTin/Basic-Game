@@ -1,5 +1,4 @@
 import arcade as arc
-from pyglet.event import EVENT_HANDLE_STATE
 
 
 class MyGame(arc.Window):
@@ -10,34 +9,17 @@ class MyGame(arc.Window):
         self.sprites_list = arc.SpriteList()
         self.key_list = []
         self.R_L = self.U_D = None
+        self.start_texture = 0
+        self.timing = 0.0
 
     def set_up(self):
-        self.ninja = arc.AnimatedWalkingSprite()
+        self.ninja = arc.Sprite("ninja.png")
         self.ninja.center_x = 200
         self.ninja.center_y = 200
-
-
-        self.ninja.stand_right_textures.append(arc.load_texture("ninja.png"))
-        self.ninja.stand_left_textures.append(arc.load_texture("ninja.png"))
-
-        self.ninja.walk_up_textures.append(arc.load_texture("ninja.png"))
-        self.ninja.walk_up_textures.append(arc.load_texture("ninja.png"))
-        self.ninja.walk_up_textures.append(arc.load_texture("ninja.png"))
-
-        self.ninja.walk_down_textures.append(arc.load_texture("ninja.png"))
-        self.ninja.walk_down_textures.append(arc.load_texture("ninja.png"))
-        self.ninja.walk_down_textures.append(arc.load_texture("ninja.png"))
-
-        self.ninja.walk_left_textures.append(arc.load_texture("ninja walking left 1.png"))
-        self.ninja.walk_left_textures.append(arc.load_texture("ninja walking left 2.png"))
-        self.ninja.walk_left_textures.append(arc.load_texture("ninja walking left 3.png"))
-
-        self.ninja.walk_right_textures.append(arc.load_texture("ninja walking right 1.png"))
-        self.ninja.walk_right_textures.append(arc.load_texture("ninja walking right 2.png"))
-        self.ninja.walk_right_textures.append(arc.load_texture("ninja walking right 3.png"))
-
-
         self.sprites_list.append(self.ninja)
+
+        self.ninja.textures.extend([arc.load_texture(f"ninja walking right {i}.png") for i in range(1,4)])
+        self.ninja.textures.extend([arc.load_texture(f"ninja walking left {i}.png") for i in range(1, 4)])
 
     def on_key_press(self, key, modifiers):
         self.key_list.append(key)
@@ -48,21 +30,27 @@ class MyGame(arc.Window):
     def on_update(self, delta_time):
         if self.key_list:
             if self.key_list[-1] == arc.key.RIGHT:
-                self.ninja.change_x = 5
+                self.start_texture += 1
+                if self.start_texture > 3:
+                    self.start_texture = 1
+                self.timing += 0.25
+                if self.timing > 1.0:
+                    self.ninja.texture = self.ninja.textures[self.start_texture]
+                    self.timing = 0.0
+
             elif self.key_list[-1] == arc.key.LEFT:
-                self.ninja.change_x = -5
+                self.start_texture += 1
+                if self.start_texture > 3:
+                    self.start_texture = 1
+                self.timing += 0.25
+                if self.timing > 1.0:
+                    self.ninja.texture = self.ninja.textures[self.start_texture+3]
+                    self.timing = 0.0
+
             elif self.key_list[-1] == arc.key.UP:
-                self.ninja.change_y = 5
+                pass
             elif self.key_list[-1] == arc.key.DOWN:
-                self.ninja.change_y = -5
-
-        if arc.key.RIGHT not in self.key_list and arc.key.LEFT not in self.key_list:
-            self.ninja.change_x = 0
-        if arc.key.UP not in self.key_list and arc.key.DOWN not in self.key_list:
-            self.ninja.change_y = 0
-
-        self.ninja.update()
-        self.ninja.update_animation(delta_time)
+                pass
 
 
     def on_draw(self):
