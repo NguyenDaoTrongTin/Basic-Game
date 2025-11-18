@@ -52,27 +52,12 @@ class MyGame(arc.Window):
     def on_update(self, delta_time):
         if self.key_list:
             if self.key_list[-1] == arc.key.RIGHT or self.key_list[-1] == arc.key.D:
-                self.start_texture += 1
-                if self.start_texture > 3:
-                    self.start_texture = 1
-                self.timing += 0.25
-                if self.timing > 1.0:
-                    self.ninja.texture = self.ninja.textures[self.start_texture]
-                    self.background.left -= 40
-                    if -self.background.left > 4913 - (self.width // 40 + 1) * 40:
-                        self.background.left = 0
-                    self.timing = 0.0
+                self.walking_right = True
+                self.walking_left = False
 
             if self.key_list[-1] == arc.key.LEFT or self.key_list[-1] == arc.key.A:
-                self.start_texture += 1
-                if self.start_texture > 3:
-                    self.start_texture = 1
-                self.timing += 0.25
-                if self.timing > 1.0:
-                    self.ninja.texture = self.ninja.textures[self.start_texture + 3]
-                    if self.background.left < -40:
-                        self.background.left += 40
-                    self.timing = 0.0
+                self.walking_left = True
+                self.walking_right = False
 
             if self.key_list[-1] == arc.key.K or self.key_list[-1] == arc.key.KEY_2:
                 self.jumping = True
@@ -83,6 +68,29 @@ class MyGame(arc.Window):
         else:
             self.ninja.texture = self.ninja.textures[0]
 
+        if self.walking_right:
+            self.start_texture += 1
+            if self.start_texture > 3:
+                self.start_texture = 1
+            self.timing += 0.25
+            if self.timing > 1.0:
+                self.ninja.texture = self.ninja.textures[self.start_texture]
+                self.background.left -= 40
+                if -self.background.left > 4913 - (self.width // 40 + 1) * 40:
+                    self.background.left = 0
+                print(-self.background.left)
+                self.timing = 0.0
+
+        if self.walking_left:
+            self.start_texture += 1
+            if self.start_texture > 3:
+                self.start_texture = 1
+            self.timing += 0.25
+            if self.timing > 1.0:
+                self.ninja.texture = self.ninja.textures[self.start_texture + 3]
+                if self.background.left < -40:
+                    self.background.left += 40
+                self.timing = 0.0
 
         if self.jumping:
             self.timing_jump += 0.5
