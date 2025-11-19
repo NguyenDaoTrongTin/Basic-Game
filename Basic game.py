@@ -6,16 +6,19 @@ class MyGame(arc.Window):
         super().__init__(600, 400, "MyGame", resizable= True)
         arc.set_background_color(arc.color.WHITE)
         self.ninja = None
-        self.jump_c = 0
+        self.jump_c = self.attack_c = self.walk_right_c = 0
+        self.walk_left_c = self.attack_left_c = self.attack_right_c = 0
         self.jumping = False
+        self.attacking = False
         self.ninja_bottom = None
         self.walking_right = self.walking_left = False
         self.background = None
         self.sprites_list = arc.SpriteList()
-        self.key_list = self.jump = []
+        self.key_list = self.jump = self.walk_right = self.walk_left = []
+        self.attack_right = self.attack_left = []
         self.R_L = self.U_D = None
         self.start_texture = 0
-        self.timing = self.timing_jump = 0.0
+        self.timing = self.timing_jump = self.timing_attack = 0.0
 
     def set_up(self):
         self.ninja = arc.Sprite("ninja_rgba.png")
@@ -24,8 +27,8 @@ class MyGame(arc.Window):
         self.ninja_bottom = self.ninja.bottom
         self.sprites_list.append(self.ninja)
 
-        self.ninja.textures.extend([arc.load_texture(f"ninja walking right {i}_rgba.png") for i in range(1,4)])
-        self.ninja.textures.extend([arc.load_texture(f"ninja walking left {i}_rgba.png") for i in range(1, 4)])
+        self.walk_right = [arc.load_texture(f"ninja walking right {i}_rgba.png") for i in range(1,4)]
+        self.walk_left = [arc.load_texture(f"ninja walking left {i}_rgba.png") for i in range(1, 4)]
 
         self.background = arc.Sprite("back ground.png")
         self.background.left = 0
@@ -36,6 +39,9 @@ class MyGame(arc.Window):
         for t in range(21):
             y = 2.5*t*(20-t)
             self.jump.append(y)
+
+        self.attack_left = [arc.load_texture(f"ninja attack left {i}_rgba.png") for i in range(1, 4)]
+        self.attack_right = [arc.load_texture(f"ninja attack right {i}_rgba.png") for i in range(1, 4)]
 
 
 
@@ -48,6 +54,8 @@ class MyGame(arc.Window):
             self.walking_right = False
         if key == arc.key.LEFT or key == arc.key.A:
             self.walking_left = False
+        if key == arc.key.J or key == arc.key.KEY_1:
+            self.attacking = False
 
     def on_update(self, delta_time):
         if self.key_list:
@@ -61,6 +69,10 @@ class MyGame(arc.Window):
 
             if self.key_list[-1] == arc.key.K or self.key_list[-1] == arc.key.KEY_2:
                 self.jumping = True
+
+            if self.key_list[-1] == arc.key.J or self.key_list[-1] == arc.key.KEY_1:
+                self.attacking = True
+
             if self.key_list[-1] == arc.key.UP:
                 pass
             if self.key_list[-1] == arc.key.DOWN:
@@ -69,25 +81,36 @@ class MyGame(arc.Window):
             self.ninja.texture = self.ninja.textures[0]
 
         if self.walking_right:
-            self.start_texture += 1
-            if self.start_texture > 3:
-                self.start_texture = 1
+            self.walk_right_c += 1
+            if self.walk_right_c > len(self.walk_right):
+                self.walk_right_c = 1
             self.timing += 0.25
             if self.timing > 1.0:
-                self.ninja.texture = self.ninja.textures[self.start_texture]
+                if self.attacking:
+                    self.attack_c += 1
+                    if self.attack_c > len(self.attack_right):
+                        self.attack_c = 1
+                    self.ninja.texture = self.attack_right[self.attack_c - 1]
+                    self.timing_attack = 0.0
+                else: self.ninja.texture = self.walk_right[self.walk_right_c-1]
                 self.background.left -= 40
                 if -self.background.left > 4913 - (self.width // 40 + 1) * 40:
                     self.background.left = 0
-                print(-self.background.left)
                 self.timing = 0.0
 
         if self.walking_left:
-            self.start_texture += 1
-            if self.start_texture > 3:
-                self.start_texture = 1
+            self.walk_left_c += 1
+            if self.walk_left_c > len(self.walk_left):
+                self.walk_left_c = 1
             self.timing += 0.25
             if self.timing > 1.0:
-                self.ninja.texture = self.ninja.textures[self.start_texture + 3]
+                if self.attacking:
+                    self.attack_c += 1
+                    if self.attack_c > len(self.attack_left):
+                        self.attack_c = 1
+                    self.ninja.texture = self.attack_left[self.attack_c - 1]
+                    self.timing_attack = 0.0
+                else: self.ninja.texture = self.walk_left[self.walk_left_c-1]
                 if self.background.left < -40:
                     self.background.left += 40
                 self.timing = 0.0
