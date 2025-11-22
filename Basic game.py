@@ -10,6 +10,7 @@ class MyGame(arc.Window):
         self.walk_left_c = self.attack_left_c = self.attack_right_c = 0
         self.shuriken_right_c = self.shuriken_left_c = self.shu_c = 0
         self.jumping = False
+        self.fall = False
         self.attacking = False
         self.shuriken = False
         self.nin_shu = False
@@ -17,8 +18,15 @@ class MyGame(arc.Window):
         self.walking_right = self.walking_left = False
         self.background = None
         self.sprites_list = arc.SpriteList()
-        self.key_list = self.jump = self.walk_right = self.walk_left = []
-        self.attack_right = self.attack_left = self.shuriken_right = self.shuriken_left = []
+        self.array_sprites_list = []
+        self.key_list = []
+        self.jump = []
+        self.walk_right = []
+        self.walk_left = []
+        self.attack_right = []
+        self.attack_left = []
+        self.shuriken_right = []
+        self.shuriken_left = []
         self.shu = None
         self.R_L = self.U_D = None
         self.start_texture = 0
@@ -50,11 +58,7 @@ class MyGame(arc.Window):
         self.shuriken_left = [arc.load_texture(f"ninja shuriken left {i}_rgba.png") for i in range(1,4)]
         self.shuriken_right = [arc.load_texture(f"ninja shuriken right {i}_rgba.png") for i in range(1,4)]
 
-        self.shu = arc.Sprite("shuriken 1_rgba.png")
-        self.shu.center_x = 400
-        self.shu.center_y = 185
-        self.shu.scale = 0.25
-        self.shu.textures.extend([arc.load_texture(f"shuriken {i}_rgba.png") for i in range(2,5)])
+
 
     def on_key_press(self, key, modifiers):
         self.key_list.append(key)
@@ -65,6 +69,8 @@ class MyGame(arc.Window):
             self.walking_right = False
         if key == arc.key.LEFT or key == arc.key.A:
             self.walking_left = False
+        if key == arc.key.K or key == arc.key.KEY_2:
+            self.fall = True
 
     def on_update(self, delta_time):
         if self.key_list:
@@ -84,6 +90,7 @@ class MyGame(arc.Window):
 
             if self.key_list[-1] == arc.key.U or self.key_list[-1] == arc.key.KEY_4:
                 self.shuriken = True
+                self.array_sprites_list.append([arc.SpriteList(), 0])
 
             if self.key_list[-1] == arc.key.UP:
                 pass
@@ -99,7 +106,8 @@ class MyGame(arc.Window):
         if self.jumping:
             self.nin_jump()
         if self.nin_shu:
-            self.shuri()
+            for pair in self.array_sprites_list:
+                self.shuri(pair)
 
     def walking_or_attack_right(self):
         self.walk_right_c += 1
@@ -150,6 +158,7 @@ class MyGame(arc.Window):
                     self.ninja.texture = self.shuriken_left[self.shuriken_left_c - 1]
                 if self.shuriken_left_c == len(self.shuriken_left):
                     self.shuriken = False
+                    self.nin_shu = True
                     self.shuriken_left_c = 0
 
             else: self.ninja.texture = self.walk_left[self.walk_left_c-1]
@@ -158,33 +167,53 @@ class MyGame(arc.Window):
             self.timing = 0.0
 
     def nin_jump(self):
-        self.timing_jump += 0.5
+        if self.fall:
+            self.timing_jump += 2.0
+        else:
+            self.timing_jump += 0.5
         if self.timing_jump > 1.0:
             self.jump_c += 1
             if self.jump_c < len(self.jump) + 1:
                 self.ninja.bottom = self.ninja_bottom + self.jump[self.jump_c - 1]
                 if self.jump_c == len(self.jump):
                     self.jumping = False
+                    self.fall = False
                     self.jump_c = 0
             self.timing_jump = 0.0
 
-    def shuri(self):
-        if self.shu not in self.sprites_list:
-            self.sprites_list.append(self.shu)
-        self.shu_c += 1
-        if self.shu_c > len(self.shu.textures):
-            self.shu_c = 1
-        self.shu.texture = self.shu.textures[self.shu_c - 1]
-        self.shu.center_x += 10
-        if self.shu.center_x > self.width + 50:
-            self.shu.center_x = 400
-            self.sprites_list.remove(self.shu)
-            self.nin_shu = False
+    def shuri(self, pair):
+        sprite_list, shu_c = pair
+        if not sprite_list:
+            shu = arc.Sprite("shuriken 1_rgba.png")
+            shu.center_x = 400
+            shu.center_y = self.ninja.bottom + 50
+            shu.scale = 0.25
+            shu.textures.extend([arc.load_texture(f"shuriken {i}_rgba.png") for i in range(2,5)])
+            sprite_list.append(shu)
+        else:
+            shu = sprite_list[0]
 
+        if self.walking_right:
+            shu.center_x += 20
+        elif self.walk_left:
+            shu.center_x -= 20
+        shu_c += 1
+        if shu_c > len(shu.textures):
+            shu_c = 1
+        shu.texture = shu.textures[shu_c-1]
+
+        if shu.center_x > self.width or shu.center_x < 0:
+            self.array_sprites_list.remove(pair)
+
+        pair[1] = shu_c
+        if not self.array_sprites_list:
+            self.nin_shu = False
 
     def on_draw(self):
         self.clear()
         self.sprites_list.draw()
+        for pair in self.array_sprites_list:
+            pair[0].draw()
 
 
 if __name__ == "__main__":
