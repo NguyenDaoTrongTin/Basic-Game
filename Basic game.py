@@ -61,10 +61,15 @@ class MyGame(arc.Window):
 
 
     def on_key_press(self, key, modifiers):
-        self.key_list.append(key)
+        if key == arc.key.U or key == arc.key.KEY_4:
+            if key not in self.key_list:
+                self.key_list.append(key)
+        else:
+            self.key_list.append(key)
 
     def on_key_release(self, key, modifiers):
-        self.key_list.remove(key)
+        if key in self.key_list:
+            self.key_list.remove(key)
         if key == arc.key.RIGHT or key == arc.key.D:
             self.walking_right = False
         if key == arc.key.LEFT or key == arc.key.A:
@@ -91,13 +96,12 @@ class MyGame(arc.Window):
             if self.key_list[-1] == arc.key.U or self.key_list[-1] == arc.key.KEY_4:
                 self.shuriken = True
                 self.array_sprites_list.append([arc.SpriteList(), 0])
+                self.key_list.pop(-1)
 
             if self.key_list[-1] == arc.key.UP:
                 pass
             if self.key_list[-1] == arc.key.DOWN:
                 pass
-        else:
-            self.ninja.texture = self.ninja.textures[0]
 
         if self.walking_right:
             self.walking_or_attack_right()
